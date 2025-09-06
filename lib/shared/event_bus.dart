@@ -9,6 +9,17 @@ class GlobalEventBus {
   static EventBus get instance => _eventBus;
 }
 
+class ApplicationTitleUpdated {
+  final String appTitle;
+
+  ApplicationTitleUpdated({required this.appTitle});
+
+  @override
+  String toString() => 'ApplicationTitleUpdated(menuId: $appTitle)';
+}
+
+//-----------------
+
 class SaveConversationEnd {
   final Conversation conversation;
   final bool hasErrors;

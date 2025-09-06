@@ -12,8 +12,10 @@ import 'package:wshell/widgets/agentlet_loader.dart';
 import 'package:wshell/widgets/chat/chat_area.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  
 
+  const HomePage({super.key});
+     
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -39,6 +41,8 @@ class _HomePageState extends State<HomePage> {
       agentletBaseUrl: '${appURL}builtin/tic-tac-toe',
       licenseType: LicenseType.openSource,
     );
+
+    GlobalEventBus.instance.fire(ApplicationTitleUpdated(appTitle: _currentAgentlet!.name));
 
     agentletShell = AgentletShell();
     agentletLoaderController = AgentletLoaderController();
@@ -122,7 +126,8 @@ class _HomePageState extends State<HomePage> {
         chatController.setBehaviour(_agentletBehaviourPrompt);
         chatController.functions = _getAgentletFunctions();
         GlobalEventBus.instance.fire(ChatCleared());
-
+        //GlobalEventBus.instance.fire(ApplicationTitleUpdated(appTitle: manifest.name));
+       
         return SizedBox.expand(
           child: Row(
             children: [

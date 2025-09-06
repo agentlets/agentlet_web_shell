@@ -1,19 +1,56 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:wshell/shared/event_bus.dart';
+import 'package:wshell/shared/logger.dart';
 import 'package:wshell/widgets/home.dart';
 
-const APP_TITLE = 'WebShel';
-
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   const App({super.key});
 
-  // This widget is the root of your application.
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  String appTitle = 'WebShell';
+  StreamSubscription? _updateAppTitleSub;
+  final logger = WebLogger.createLogger(name: 'HomePage');
+
+  void _changeTitle(String newTitle) async {
+    setState(() {
+      appTitle = newTitle;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _subscribeToEvents();
+  }
+
+  void _subscribeToEvents() async {
+    _updateAppTitleSub = GlobalEventBus.instance
+        .on<ApplicationTitleUpdated>()
+        .listen((event) async {
+      logger.debug('Evento recibido: ${event}');
+      _changeTitle(event.appTitle);
+    });
+  }
+
+  @override
+  void dispose() {
+    _updateAppTitleSub?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: APP_TITLE,
+      title: appTitle,
       debugShowCheckedModeBanner: false,
       theme: _buildAppTheme(),
-      home: const HomePage(),
+      home: HomePage(),
     );
   }
 
