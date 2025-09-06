@@ -1,6 +1,4 @@
-import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
-
+// ignore_for_file: avoid_print
 class WebLogger {
   final String name;
 
@@ -10,31 +8,29 @@ class WebLogger {
     return WebLogger._(name);
   }
 
-  JSObject get _console =>
-      (globalContext.getProperty('console'.toJS) as JSObject);
-
   Future<void> info(String message) async {
     final taggedMessage = '[$name] $message';
-    _console.callMethod<JSAny>('info'.toJS, [taggedMessage.toJS].toJS);
+    print('INFO: $taggedMessage');
   }
 
   Future<void> warn(String message) async {
     final taggedMessage = '[$name] $message';
-    _console.callMethod<JSAny>('warn'.toJS, [taggedMessage.toJS].toJS);
+    print('WARN: $taggedMessage');
+    ;
   }
 
   Future<void> error(String message) async {
     final taggedMessage = '[$name] $message';
-    _console.callMethod<JSAny>('error'.toJS, [taggedMessage.toJS].toJS);
+    print('ERROR: $taggedMessage');
   }
 
   Future<void> debug(String message) async {
     final taggedMessage = '[$name] $message';
-    _console.callMethod<JSAny>('debug'.toJS, [taggedMessage.toJS].toJS);
+    print('DEBUG: $taggedMessage');
   }
 
   Future<void> log(String message) async {
     final taggedMessage = '[$name] $message';
-    _console.callMethod<JSAny>('log'.toJS, [taggedMessage.toJS].toJS);
+    print('LOG: $taggedMessage');
   }
 }
