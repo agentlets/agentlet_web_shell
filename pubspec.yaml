@@ -1,0 +1,36 @@
+name: wshell
+description: A Web Shell for conversational experiences with AI (Agentlets).
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.2.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  event_bus: ^2.0.1
+  web: ^1.1.1
+  flutter_svg: ^2.2.0
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  get_secure_storage: ^1.0.5
+  get_storage: ^2.1.1
+  uuid: ^4.5.1
+  idb_shim: ^2.6.7
+  http: ^1.4.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_gen_runner: ^5.10.0
+  build_runner: ^2.5.4
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+  assets:
+  - assets/icons/
+  

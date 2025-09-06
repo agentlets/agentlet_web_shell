@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Tic-Tac-Toe Agentlet</title>
+    <script>
+       window.agentlet_shell = {
+            registerAgentlet: (manifest) => {
+                console.log(`registerAgentlet: ${JSON.stringify(manifest)}`);
+            },
+            sendMessageToShell: (msg) => {
+                console.log(`sendMessageToShell: ${JSON.stringify(msg)}`);
+            },
+        }
+    </script>
+</head>
+
+<body>
+    <tic-tac-toe></tic-tac-toe>
+
+    <script type="module" src="agentlet.js"></script>
+</body>
+
+</html>
