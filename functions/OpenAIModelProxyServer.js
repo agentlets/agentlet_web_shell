@@ -4,6 +4,7 @@ export default async function ({ req, res, log, error }) {
   try {
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     if (!OPENAI_API_KEY) {
+      error('Missing OpenAI API key in environment');
       return res.json({ error: 'Missing OpenAI API key in environment' }, 500);
     }
 
@@ -25,7 +26,7 @@ export default async function ({ req, res, log, error }) {
     // Return OpenAI's response
     return res.json(openaiData);
   } catch (err) {
-    req.log(err);
+    error(err);
     return res.json({ error: 'Something went wrong', details: err.message }, 500);
   }
 };
