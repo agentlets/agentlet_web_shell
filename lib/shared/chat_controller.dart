@@ -19,8 +19,6 @@ class ChatController {
       timestamp: DateTime.now(),
     );
 
-    _conversation.appendMessage(newMessage);
-
     final event = MessageSent(
         message: newMessage, 
         previousMessages: _conversation.messages,
@@ -28,6 +26,8 @@ class ChatController {
         functions: _functions
         );
     GlobalEventBus.instance.fire(event);
+
+    _conversation.appendMessage(newMessage);
   }
 
   void sendFunctionCallResponse(FunctionCallRequest functionCallRequest, dynamic response) {
@@ -38,8 +38,6 @@ class ChatController {
       timestamp: DateTime.now(),
     );
 
-    _conversation.appendMessage(newMessage);
-
     final event = MessageSent(
         message: newMessage, 
         previousMessages: _conversation.messages,
@@ -47,6 +45,8 @@ class ChatController {
         functions: _functions
         );
     GlobalEventBus.instance.fire(event);
+
+    _conversation.appendMessage(newMessage);
   }
 
   void setBehaviour(String text) {

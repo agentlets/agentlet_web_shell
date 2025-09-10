@@ -39,7 +39,7 @@ class OpenAIModelProxyClient extends LlmModel {
 
     for (final m in previousMessages) {
       if (m is TextLLMPrompt) {
-        messages.add({'role': 'user', 'content': m.prompt});
+        messages.add({'role': m.role.name, 'content': m.prompt});
       } else if (m is FunctionCallResponseLLMPrompt) {
         messages.add({
           'role': 'function',
@@ -50,7 +50,7 @@ class OpenAIModelProxyClient extends LlmModel {
     }
 
     if (prompt is TextLLMPrompt) {
-      messages.add({'role': 'user', 'content': prompt.prompt});
+      messages.add({'role': prompt.role.name, 'content': prompt.prompt});
     } else if (prompt is FunctionCallResponseLLMPrompt) {
       messages.add({
         'role': 'function',
