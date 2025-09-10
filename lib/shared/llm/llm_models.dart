@@ -87,7 +87,7 @@ class LlmModels implements LlmModel {
         final todayAndWhereAmISystemPrompt = TextLLMPrompt(prompt: '''
               Current DateTime is ${DateTime.now().toIso8601String()}.
               Current location info is $_locationInfo.
-            ''', role: LLMRole.system);
+            '''.trim(), role: LLMRole.system);
         logger.debug(
             'System message for date and location: ${todayAndWhereAmISystemPrompt.toString()}');
         previousPrompts.add(todayAndWhereAmISystemPrompt);

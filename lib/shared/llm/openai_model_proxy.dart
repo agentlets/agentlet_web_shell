@@ -1,6 +1,6 @@
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:wshell/shared/appwrite_service.dart';
 import 'package:wshell/model/chat_message.dart';
 import 'package:wshell/shared/app_error.dart';
 import 'package:wshell/shared/llm/llm_model.dart';
@@ -8,19 +8,23 @@ import 'package:wshell/shared/llm/llm_model_error.dart';
 import 'package:wshell/shared/logger.dart';
 
 class OpenAIModelProxyClient extends LlmModel {
-  static final chatUri =
-      Uri.parse('https://api.openai.com/v1/chat/completions');
+  //static final functionUri = Uri.parse('https://68c1a755002a9191729a.fra.appwrite.run');
+  static final functionUri =
+      Uri.parse('https://485e6ce3fc0d4af5888d99e3d1f35d1d.api.mockbin.io/');
 
   final logger = WebLogger.createLogger(name: 'OpenAIModel');
 
   // Use package:http client for web compatibility
   final http.Client httpClient = http.Client();
 
-  OpenAIModelProxyClient(): super(id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI');
+  OpenAIModelProxyClient()
+      : super(id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI');
 
-  Map<String, String> _buildHeaders() {
+  Future<Map<String, String>> _buildHeaders() async {
+    final jwt = await AppwriteService.instance.getJwtFromAnonymousLogin();
     return {
       'Content-Type': 'application/json',
+      'x-appwrite-user-jwt': jwt,
     };
   }
 
@@ -30,49 +34,59 @@ class OpenAIModelProxyClient extends LlmModel {
     List<Map<String, dynamic>>? functions,
     dynamic functionCall,
   }) {
-    final List<Map<String, String>> openAIMessages = previousMessages.map((m) {
-      final Map<String, String> mappedMessage = {
-        'role': m.role.name
-      };
+    // Build messages array matching the requested structure
+    final List<Map<String, String>> messages = [];
+
+    for (final m in previousMessages) {
       if (m is TextLLMPrompt) {
-         mappedMessage['content'] = m.prompt;
+        messages.add({'role': 'user', 'content': m.prompt});
+      } else if (m is FunctionCallResponseLLMPrompt) {
+        messages.add({
+          'role': 'function',
+          'content': jsonEncode(m.response),
+          'name': m.functionCallRequest.functionName,
+        });
       }
-      if (m is FunctionCallResponseLLMPrompt) {
-        final FunctionCallResponseLLMPrompt msg = m;
-        mappedMessage['name'] = msg.functionCallRequest.functionName;
-        mappedMessage['content'] = jsonEncode(msg.response);
-      }
-      return mappedMessage;
-    }).toList();
+    }
 
-    if (prompt is FunctionCallResponseLLMPrompt) {
-      final FunctionCallResponseLLMPrompt fnCallResponsePrompt = prompt;
-      openAIMessages.add({
+    if (prompt is TextLLMPrompt) {
+      messages.add({'role': 'user', 'content': prompt.prompt});
+    } else if (prompt is FunctionCallResponseLLMPrompt) {
+      messages.add({
         'role': 'function',
-        'name': fnCallResponsePrompt.functionCallRequest.functionName,
-        'content': jsonEncode(fnCallResponsePrompt.response)
+        'content': jsonEncode(prompt.response),
+        'name': prompt.functionCallRequest.functionName,
       });
-    
-    } else if (prompt is TextLLMPrompt) {
-      openAIMessages.add({'role': 'user', 'content': prompt.prompt});
-    
     } else {
-      throw ApplicationError(message: 'Unable to build request body. Unknow prompt type: ${prompt.runtimeType.toString()}');
+      throw ApplicationError(
+          message:
+              'Unable to build request body. Unknow prompt type: ${prompt.runtimeType.toString()}');
     }
 
-    final body = {
-      'model': id,
-      'messages': openAIMessages,
-    };
+    // Build function_call array if provided via parameters
+    List<Map<String, dynamic>>? functionCallArray;
     if (functions != null && functions.isNotEmpty) {
-      body['functions'] = functions;
-
-      if (functionCall != null) {
-        body['function_call'] = functionCall;
-      }
+      functionCallArray = functions
+          .map((f) => {
+                'name': f['name'],
+                'description': f['description'],
+                'parameters': f['parameters'],
+              })
+          .toList();
+    } else if (functionCall != null && functionCall is Map<String, dynamic>) {
+      functionCallArray = [
+        {
+          'name': functionCall['name'],
+          'description': functionCall['description'],
+          'parameters': functionCall['parameters'],
+        }
+      ];
     }
 
-    return body;
+    return {
+      'messages': messages,
+      if (functionCallArray != null) 'function_call': functionCallArray,
+    };
   }
 
   List<LLMPromptBase> _mapPreviousMessages(List<LLMPromptBase> previousMessages,
@@ -99,37 +113,31 @@ class OpenAIModelProxyClient extends LlmModel {
     );
     logger.debug('>>> request body to send: $body');
 
-    return httpClient
-        .post(
-      chatUri,
-      headers: _buildHeaders(),
-      body: jsonEncode(body),
-    )
+    return _buildHeaders()
+        .then((headers) => httpClient.post(
+              functionUri,
+              headers: headers,
+              body: jsonEncode(body),
+            ))
         .then((r) {
-          final dynamic mappedResponse = {
-            'status': r.statusCode,
-            'body': r.body
-          };
-          logger.debug('<<< response from model: $mappedResponse');
-          return r;
-        });
+      final dynamic mappedResponse = {'status': r.statusCode, 'body': r.body};
+      logger.debug('<<< response from model: $mappedResponse');
+      return r;
+    });
   }
 
   LLMResponse _handleApiResponse(http.Response response) {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final messageData = data['choices'][0]['message'];
-
-      // Return FunctionCallLLMResponse if function call is present
-      if (messageData.containsKey('function_call')) {
-        return _buildFunctionCallResponse(messageData['function_call']);
+      // Expect either a direct text or a function call payload from the function
+      if (data is Map<String, dynamic> && data.containsKey('function_call')) {
+        return _buildFunctionCallResponse(data['function_call']);
       }
-
-      final message = messageData['content'];
+      final message = data['content'] ?? data.toString();
       return TextLLMResponse(response: message);
     } else {
       throw LlmModelError(
-          'Failed to get response from OpenAI: ${response.body}', this, null);
+          'Failed to get response from function: ${response.body}', this, null);
     }
   }
 
