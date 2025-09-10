@@ -1,6 +1,6 @@
-import OpenAIChatClient from './lib/OpenAIChatClient';
-import OpenAiChatError from './lib/OpenAiChatError';
-import Logger from './lib/AppWriteLogger';
+import OpenAIChatClient from './lib/OpenAIChatClient.js';
+import OpenAiChatError from './lib/OpenAiChatError.js';
+import Logger from './lib/AppWriteLogger.js';
 
 
 export default async function ({ req, res, log, error }) {

@@ -1,4 +1,4 @@
-import { AbstractLogger, LOG_LEVELS } from './AbstractLogger';
+import { AbstractLogger, LOG_LEVELS } from './AbstractLogger.js';
 
 class AppWriteLogger extends AbstractLogger {
      constructor(traceId, level = 'info', stdOut, stdErr) {

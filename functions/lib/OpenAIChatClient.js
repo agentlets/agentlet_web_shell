@@ -1,6 +1,6 @@
 import { OpenAI } from 'openai';
-import OpenAIChatResponse from './OpenAIChatResponse';
-import OpenAiChatError from './OpenAiChatError';
+import OpenAIChatResponse from './OpenAIChatResponse.js';
+import OpenAiChatError from './OpenAiChatError.js';
 
 class OpenAIChatClient {
   constructor(config) {
