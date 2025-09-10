@@ -10,11 +10,11 @@ class OpenAIChatClient {
     this.temperature = config.temperature;
     // Este modelo no admite temperature, por lo que no lo configuramos
     this.maxTokens = config.maxTokens || 1000;
-    this.logger = config.logger; 
+    this.logger = config.logger;
     this.client = new OpenAI({
-       apiKey: this.apiKey
-       //baseURL: 'https://485e6ce3fc0d4af5888d99e3d1f35d1d.api.mockbin.io/'
-       });
+      apiKey: this.apiKey
+      //baseURL: 'https://485e6ce3fc0d4af5888d99e3d1f35d1d.api.mockbin.io/'
+    });
   }
 
   /**
@@ -30,7 +30,7 @@ class OpenAIChatClient {
     const startTime = Date.now();
 
     try {
-      const response = await this.client.responses.create(requestBody);      
+      const response = await this.client.responses.create(requestBody);
       this._logResponse(response);
 
       const responseTimeMs = Date.now() - startTime;
@@ -98,14 +98,10 @@ class OpenAIChatClient {
    * @returns {string} Contenido de texto extraído.
    */
   _extractContent(response) {
-    if (typeof response.text === 'string') {
-      return response.text;
-    } else if (Array.isArray(response.output)) {
-      const message = response.output.find(o => o.type === 'message');
-      const outputText = message?.content?.find(c => c.type === 'output_text');
-      return outputText?.text || '';
-    }
-    return '';
+    return {
+      output: response.output,          // array completo de output items
+      output_text: response.output_text // texto plano concatenado
+    }; ﬂ
   }
 
   /**
