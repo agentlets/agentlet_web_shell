@@ -1,6 +1,6 @@
-const LOG_LEVELS = ['error', 'warn', 'info', 'debug'];
+export const LOG_LEVELS = ['error', 'warn', 'info', 'debug'];
 
-class AbstractLogger {
+export class AbstractLogger {
   constructor(traceId, level = 'info') {
     if (new.target === AbstractLogger) {
       throw new TypeError("Cannot construct AbstractLogger instances directly");
@@ -29,8 +29,3 @@ class AbstractLogger {
     this.log('debug', message);
   }
 }
-
-module.exports = {
-    AbstractLogger,
-    LOG_LEVELS
-};
