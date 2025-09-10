@@ -8,9 +8,10 @@ import 'package:wshell/shared/llm/llm_model_error.dart';
 import 'package:wshell/shared/logger.dart';
 
 class OpenAIModelProxyClient extends LlmModel {
-  //static final functionUri = Uri.parse('https://68c1a755002a9191729a.fra.appwrite.run');
   static final functionUri =
-      Uri.parse('https://485e6ce3fc0d4af5888d99e3d1f35d1d.api.mockbin.io/');
+      Uri.parse('https://68c1a755002a9191729a.fra.appwrite.run');
+  //static final functionUri =
+  //    Uri.parse('https://485e6ce3fc0d4af5888d99e3d1f35d1d.api.mockbin.io/');
 
   final logger = WebLogger.createLogger(name: 'OpenAIModel');
 

@@ -90,7 +90,7 @@ class LlmModels implements LlmModel {
             '''.trim(), role: LLMRole.system);
         logger.debug(
             'System message for date and location: ${todayAndWhereAmISystemPrompt.toString()}');
-        previousPrompts.add(todayAndWhereAmISystemPrompt);
+        previousPrompts.insert(0, todayAndWhereAmISystemPrompt);
       } catch (error) {
         logger.error('Unable to get current location: $error');
       }

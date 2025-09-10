@@ -11,10 +11,44 @@ export default async function ({ req, res, log, error }) {
   log(`method=${req.method}, path=${req.path}`);
   log('headers:', req.headers);
 
+  // CORS handling and route/method restrictions
+  const origin = req.headers?.origin || '';
+  const allowedOrigins = ['http://localhost', 'http://localhost:3000', 'https://localhost', 'https://agentlet.org', 'http://agentlet.org'];
+  const isAllowedOrigin = allowedOrigins.some(o => origin && origin.startsWith(o));
+
+  // Only allow the route /invoke_llm
+  if (req.path !== '/invoke_llm') {
+    // For non-matching routes, return 404
+    return res.json({ error: 'Not Found' }, 404);
+  }
+
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    const headers = {
+      'Access-Control-Allow-Origin': isAllowedOrigin ? origin : 'http://localhost',
+      'Vary': 'Origin',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, x-appwrite-user-jwt',
+      'Access-Control-Max-Age': '86400'
+    };
+    return res.send('', 204, headers);
+  }
+
+  // Enforce POST for actual invocation
+  if (req.method !== 'POST') {
+    const headers = {
+      'Access-Control-Allow-Origin': isAllowedOrigin ? origin : 'http://localhost',
+      'Vary': 'Origin'
+    };
+    return res.json({ error: 'Method Not Allowed' }, 405, headers);
+  }
+
+  // CORS header for successful POST responses will be attached in responses below
+
   if (req.bodyText) logger.log('bodyText:', req.bodyText);
-  try{
+  try {
     if (req.bodyJson) logger.log('bodyJson:', JSON.stringify(req.bodyJson));
-  } finally {}
+  } finally { }
   if (req.bodyBinary) logger.log('bodyBinary length:', req.bodyBinary.length);
 
   let userMessages = [];
@@ -35,7 +69,11 @@ export default async function ({ req, res, log, error }) {
   if (!Array.isArray(userMessages) || userMessages.length === 0) {
     var message = 'Prompt no proporcionado o vacío.';
     logger.error(message);
-    return res.json({ error: message }, 400);
+    const headers = {
+      'Access-Control-Allow-Origin': isAllowedOrigin ? origin : 'http://localhost',
+      'Vary': 'Origin'
+    };
+    return res.json({ error: message }, 400, headers);
   }
 
   const config = {
@@ -59,6 +97,11 @@ export default async function ({ req, res, log, error }) {
       parsedContent = { raw: response.content };
     }
 
+    const headers = {
+      'Access-Control-Allow-Origin': isAllowedOrigin ? origin : 'http://localhost',
+      'Vary': 'Origin'
+    };
+
     return res.json({
       content: parsedContent,
       metrics: {
@@ -68,7 +111,7 @@ export default async function ({ req, res, log, error }) {
         webSearchCalls: response.webSearchCalls,
         responseTimeMs: response.responseTimeMs,
       }
-    });
+    }, 200, headers);
   } catch (error) {
     const errorDetails = error instanceof OpenAiChatError ? {
       message: error.message,
@@ -80,6 +123,10 @@ export default async function ({ req, res, log, error }) {
     };
 
     logger.error(errorDetails.message);
-    return res.json({ error: errorDetails }, errorDetails.statusCode);
+    const headers = {
+      'Access-Control-Allow-Origin': isAllowedOrigin ? origin : 'http://localhost',
+      'Vary': 'Origin'
+    };
+    return res.json({ error: errorDetails }, errorDetails.statusCode, headers);
   }
 };
