@@ -1,6 +1,23 @@
 {
+  "name": "openai_appwrite_proxy_function",
   "type": "module",
+  "version": "1.0.0",
+  "description": "Appwrite function to secure call openai models",
+  "main": "OpenAIModelProxyServer.js",
+  "scripts": {
+    "start": "node cli.js"
+  },
+  "keywords": [
+    "openai",
+    "cli",
+    "chat",
+    "websearch",
+    "gpt-4o"
+  ],
+  "author": "Gilbert Gonzalez",
+  "license": "",
   "dependencies": {
-    "node-fetch": "^3.3.2"
+    "dotenv": "^16.3.1",
+    "openai": "^4.21.1"
   }
 }
