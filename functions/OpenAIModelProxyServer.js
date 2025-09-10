@@ -1,9 +1,9 @@
 // index.js
 import fetch from 'node-fetch';
 
-export default async ({ req, res, log, env }) => {
+export default async function (req, res) {
   try {
-    const OPENAI_API_KEY = env.OPENAI_API_KEY;
+    const OPENAI_API_KEY = req.env.OPENAI_API_KEY;
     if (!OPENAI_API_KEY) {
       return res.json({ error: 'Missing OpenAI API key in environment' }, 500);
     }
@@ -26,7 +26,7 @@ export default async ({ req, res, log, env }) => {
     // Return OpenAI's response
     return res.json(openaiData);
   } catch (err) {
-    log(err);
+    req.log(err);
     return res.json({ error: 'Something went wrong', details: err.message }, 500);
   }
 };
