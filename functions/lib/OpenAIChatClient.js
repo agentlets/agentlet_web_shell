@@ -16,11 +16,12 @@ class OpenAIChatClient {
 
   /**
    * Enviar un mensaje al modelo y obtener una respuesta estructurada.
-   * @param {string|Array} messagesOrPrompt - Puede ser un string (prompt del usuario) o un array de mensajes.
+   * @param {string|Array} messages - Array de mensajes.
+   * @param {Array} functions - Array de funciones para herramientas.
    * @returns {Promise<OpenAIChatResponse>}
    */
-  async sendMessage(messagesOrPrompt) {
-    const requestBody = this._buildRequestBody(messagesOrPrompt);
+  async sendMessage(messages, functions = []) {
+    const requestBody = this._buildRequestBody(messages, functions);
     this._logRequest(requestBody);
 
     const startTime = Date.now();
@@ -50,30 +51,21 @@ class OpenAIChatClient {
 
   /**
    * Construye el cuerpo de la solicitud para enviar al modelo.
-   * @param {string|Array} messagesOrPrompt - Puede ser un string (prompt del usuario) o un array de mensajes.
+   * @param {Array} messages - Array de mensajes.
+   * @param {Array} functions - Array de funciones para herramientas.
    * @returns {Object} Cuerpo de la solicitud con los parámetros configurados.
    */
-  _buildRequestBody(messagesOrPrompt) {
-    const baseBody = {
+  _buildRequestBody(messages, functions) {
+    return {
       model: this.model,
-      input: messagesOrPrompt,
-      tools: [{ type: 'web_search_preview' }],
+      input: messages,
+      tools: functions.map(fn => ({ type: 'function', function: fn })),
       tool_choice: this.toolChoice,
       max_output_tokens: this.maxTokens,
       temperature: this.temperature,
-      parallel_tool_calls: true,
+      parallel_tool_calls: false,
       service_tier: 'default'
     };
-    if (Array.isArray(messagesOrPrompt)) {
-      // No incluir instructions si es un array de mensajes
-      return baseBody;
-    } else {
-      // Incluir instructions si es un string
-      return {
-        ...baseBody,
-        instructions: this.systemPrompt
-      };
-    }
   }
 
   /**

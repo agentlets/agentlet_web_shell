@@ -17,41 +17,18 @@ export default async function ({ req, res, log, error }) {
   } finally {}
   if (req.bodyBinary) logger.log('bodyBinary length:', req.bodyBinary.length);
 
-  let userMessages;
+  let userMessages = [];
+  let functions = [];
 
-  // Caso 1: llamada directa por subdominio (bodyText contiene el JSON crudo)
-  if (req.bodyText) {
-    logger.log("bodyText exists!");
-    try {
-      // Intento parsear por si viene como string JSON
-      const parsedBody = JSON.parse(req.bodyText);
-      if (Array.isArray(parsedBody)) {
-        userMessages = parsedBody;
-      } else if (parsedBody && Array.isArray(parsedBody.messages)) {
-        userMessages = parsedBody.messages;
-      } else {
-        userMessages = [{ role: "user", content: req.bodyText }];
-      }
-    } catch {
-      userMessages = [{ role: "user", content: req.bodyText }];
+  const body = req.bodyJson || (req.bodyText ? JSON.parse(req.bodyText) : null);
+
+  if (body) {
+    if (Array.isArray(body.messages)) {
+      userMessages = body.messages;
     }
-  } else {
-    logger.log("bodyText is empty... trying bodyJson...");
 
-    // Caso 2: llamada interna (bodyJson ya está procesado por Appwrite)
-    if (req.bodyJson && req.bodyJson.data) {
-      try {
-        const parsedData = JSON.parse(req.bodyJson.data);
-        if (Array.isArray(parsedData)) {
-          userMessages = parsedData;
-        } else if (parsedData && Array.isArray(parsedData.messages)) {
-          userMessages = parsedData.messages;
-        } else {
-          userMessages = [{ role: "user", content: req.bodyJson.data }];
-        }
-      } catch {
-        userMessages = [{ role: "user", content: req.bodyJson.data }];
-      }
+    if (Array.isArray(body.function_call)) {
+      functions = body.function_call;
     }
   }
 
@@ -73,7 +50,7 @@ export default async function ({ req, res, log, error }) {
   const client = new OpenAIChatClient(config);
 
   try {
-    const response = await client.sendMessage(userMessages);
+    const response = await client.sendMessage(userMessages, functions);
     let parsedContent;
     try {
       parsedContent = JSON.parse(response.content);
