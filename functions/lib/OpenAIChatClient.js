@@ -62,7 +62,7 @@ class OpenAIChatClient {
     return {
       model: this.model,
       input: messages,
-      tools: functions.map(fn => ({ type: 'function', function: fn })),
+      tools: functions.map(fn => ({ type: 'function', ...fn })),
       tool_choice: functions.length > 0 ? this.toolChoice : 'auto',
       max_output_tokens: this.maxTokens,
       temperature: this.temperature,

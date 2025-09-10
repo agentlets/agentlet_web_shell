@@ -1,7 +1,7 @@
 {
   "name": "openai_appwrite_proxy_function",
   "type": "module",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Appwrite function to secure call openai models",
   "main": "OpenAIModelProxyServer.js",
   "scripts": {
