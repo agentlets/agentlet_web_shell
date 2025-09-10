@@ -9,7 +9,7 @@ import 'package:wshell/shared/logger.dart';
 
 class OpenAIModelProxyClient extends LlmModel {
   static final functionUri =
-      Uri.parse('https://68c1a755002a9191729a.fra.appwrite.run');
+      Uri.parse('https://68c1a755002a9191729a.fra.appwrite.run/invoke_llm');
   //static final functionUri =
   //    Uri.parse('https://485e6ce3fc0d4af5888d99e3d1f35d1d.api.mockbin.io/');
 
@@ -128,18 +128,72 @@ class OpenAIModelProxyClient extends LlmModel {
   }
 
   LLMResponse _handleApiResponse(http.Response response) {
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      // Expect either a direct text or a function call payload from the function
-      if (data is Map<String, dynamic> && data.containsKey('function_call')) {
-        return _buildFunctionCallResponse(data['function_call']);
-      }
-      final message = data['content'] ?? data.toString();
-      return TextLLMResponse(response: message);
-    } else {
+    if (response.statusCode != 200) {
       throw LlmModelError(
           'Failed to get response from function: ${response.body}', this, null);
     }
+
+    final dynamic data = jsonDecode(response.body);
+
+    // Expected shape example:
+    // {
+    //   "content": {
+    //     "raw": {
+    //       "output": [
+    //         { "type": "function_call", "name": "...", "arguments": "{...}", ... }
+    //       ],
+    //       "output_text": "..."
+    //     }
+    //   }
+    // }
+
+    if (data is! Map<String, dynamic>) {
+      return TextLLMResponse(response: data.toString());
+    }
+
+    final content = data['content'];
+    if (content is Map<String, dynamic>) {
+      final raw = content['raw'];
+      if (raw is Map<String, dynamic>) {
+        // 1) Prefer explicit output array entries
+        final output = raw['output'];
+        if (output is List && output.isNotEmpty) {
+          final first = output.first;
+          if (first is Map<String, dynamic>) {
+            final type = first['type'];
+
+            if (type == 'function_call') {
+              final Map<String, dynamic> functionCallData = {
+                'call_id': first['call_id'],
+                'name': first['name'],
+                'arguments': first['arguments'], // string JSON per example
+              };
+              return _buildFunctionCallResponse(functionCallData);
+            }
+
+            // If it's a text-like output item, try common fields
+            final text = first['text'] ?? first['content'] ?? '';
+            if (text is String && text.isNotEmpty) {
+              return TextLLMResponse(response: text);
+            }
+          }
+        }
+
+        // 2) Fallback to output_text if present
+        final outputText = raw['output_text'];
+        if (outputText is String && outputText.isNotEmpty) {
+          return TextLLMResponse(response: outputText);
+        }
+      }
+    }
+
+    // Legacy fallbacks
+    if (data.containsKey('function_call')) {
+      return _buildFunctionCallResponse(data['function_call']);
+    }
+    final message = data['content'] ?? data.toString();
+    return TextLLMResponse(
+        response: message is String ? message : message.toString());
   }
 
   @override
@@ -172,11 +226,13 @@ class OpenAIModelProxyClient extends LlmModel {
 
 FunctionCallLLMResponse _buildFunctionCallResponse(
     Map<String, dynamic> functionCallData) {
+  final callId = functionCallData['call_id'];
   final functionName = functionCallData['name'];
   final argumentsJson = functionCallData['arguments'];
   final arguments = jsonDecode(argumentsJson) as Map<String, dynamic>;
   return FunctionCallLLMResponse(
     response: FunctionCallRequest(
+      callId: callId,
       functionName: functionName,
       arguments: arguments,
     ),

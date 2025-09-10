@@ -104,6 +104,7 @@ class FunctionCallResponseMessage extends ChatMessageBase {
     return FunctionCallResponseMessage(
       id: map['id'],
       functionCallRequest: FunctionCallRequest(
+        callId: map['functionCallRequest']['call_id'],
         functionName: map['functionCallRequest']['functionName'],
         arguments: Map<String, dynamic>.from(map['functionCallRequest']['arguments']),
       ),
@@ -120,10 +121,12 @@ class FunctionCallResponseMessage extends ChatMessageBase {
 }
 
 class FunctionCallRequest {
+  final String callId;
   final String functionName;
   final Map<String, dynamic> arguments;
 
   FunctionCallRequest({
+    required this.callId,
     required this.functionName,
     required this.arguments,
   });

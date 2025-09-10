@@ -95,9 +95,12 @@ class AgentletLoaderController {
   void _sendToolResponseToModel(dynamic response) {
     logger.debug('sending FunctionCallResponseSent event from: ${response}...');
 
+    final Map<String, dynamic> params = response['params'];
     final event = FunctionCallResponseSent(
         functionCallRequest: FunctionCallRequest(
-            functionName: response['tool'], arguments: response['params']),
+            callId: params['__call_id'],
+            functionName: response['tool'], 
+            arguments: params),
         response: response['response']);
     GlobalEventBus.instance.fire(event);
     logger.debug('event sent: $event');

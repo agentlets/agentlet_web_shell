@@ -1,5 +1,6 @@
 // home.dart
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:wshell/agentlet_shell/agentlet_shell.dart';
@@ -30,6 +31,8 @@ class _HomePageState extends State<HomePage> {
   late final AgentletLoader webComponentLoader;
   late final AgentletLoaderController agentletLoaderController;
   StreamSubscription? _messageFromAgentletSub;
+  StreamSubscription? _llmInvokeFunctionSub;
+  StreamSubscription? _llmFunctioCallResponseSub;
   String agentletChatName = '';
   final logger = WebLogger.createLogger(name: 'HomePage');
 
@@ -72,14 +75,46 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _messageFromAgentletSub?.cancel();
+    _llmInvokeFunctionSub?.cancel();
+    _llmFunctioCallResponseSub?.cancel();
     super.dispose();
   }
 
   void _subscribeToEvents() async {
     _messageFromAgentletSub =
-        GlobalEventBus.instance.on<AgentletMessageSent>().listen((event) {
-      logger.debug('MyHomePage: evento recibido: ${event}');
+        GlobalEventBus.instance.on<AgentletMessageSent>()
+        .listen((event) {
+      logger.debug('Mensaje recibido from Agentlet: ${event}');
       chatController.sendMessage(event.message);
+    });
+
+     _llmInvokeFunctionSub = GlobalEventBus.instance.on<InvokeFunctionResponseSent>()
+        .listen((event) {
+      logger.debug('Evento recibido: ${event}');
+
+      if (event.functionCallRequest.functionName.startsWith('agentlet_')) {
+        final Map<String, dynamic> toolRequest = {
+          'call_id': event.functionCallRequest.callId,
+          'tool': event.functionCallRequest.functionName
+              .replaceFirst('agentlet_', ''),
+          'params': event.functionCallRequest.arguments
+        };
+
+        final params = toolRequest['params'] as Map<String, dynamic>;
+        params['__call_id'] = event.functionCallRequest.callId;
+        
+        final String toolJsonRequest = jsonEncode(toolRequest);
+        agentletLoaderController.sendMessageToWebComponent(toolJsonRequest);
+      }
+    });
+
+    _llmFunctioCallResponseSub =
+        GlobalEventBus.instance.on<FunctionCallResponseSent>()
+        .listen((event) {
+      logger.debug('Evento FunctionCallResponseSent recibido: $event');
+
+      chatController.sendFunctionCallResponse(
+          event.functionCallRequest, event.response);
     });
   }
 

@@ -2,11 +2,32 @@ import 'package:event_bus/event_bus.dart';
 import 'package:wshell/agentlet_shell/manifest/manifest_v1_1.dart';
 import 'package:wshell/model/chat_message.dart';
 import 'package:wshell/model/conversation.dart';
+import 'package:wshell/shared/logger.dart';
 
 class GlobalEventBus {
   static final EventBus _eventBus = EventBus();
+  final logger = WebLogger.createLogger(name: 'GlobalEventBus');
 
-  static EventBus get instance => _eventBus;
+  // Singleton instance of GlobalEventBus
+  static final GlobalEventBus _instance = GlobalEventBus._internal();
+
+  GlobalEventBus._internal();
+
+  static GlobalEventBus get instance => _instance;
+
+  // Wrapper to fire events
+  void fire(event) {
+    final typeOfEvent = event.runtimeType.toString();
+    logger.debug('firing event type: $typeOfEvent, payload: $event');
+    _eventBus.fire(event);
+  }
+
+  // Wrapper to listen to events of type T
+  Stream<T> on<T>() {
+    final typeOfEvent = '$T';
+    logger.debug('subscribing to event type: $typeOfEvent...');
+    return _eventBus.on<T>();
+  }
 }
 
 class ApplicationTitleUpdated {
@@ -27,7 +48,8 @@ class SaveConversationEnd {
   SaveConversationEnd({required this.conversation, this.hasErrors = false});
 
   @override
-  String toString() => 'SaveConversationEnd(conversation: $conversation, hasErrors: $hasErrors)';
+  String toString() =>
+      'SaveConversationEnd(conversation: $conversation, hasErrors: $hasErrors)';
 }
 
 class SaveConversationBegin {
@@ -60,7 +82,8 @@ class LLMModelConfigurationError {
   LLMModelConfigurationError({required this.message, required this.isWarning});
 
   @override
-  String toString() => 'LLMModelConfigurationError(message: $message, isWarning: $isWarning)';
+  String toString() =>
+      'LLMModelConfigurationError(message: $message, isWarning: $isWarning)';
 }
 
 class MenuOptionSelected {
@@ -83,17 +106,18 @@ class MessageResponseSent {
       this.hasErrors = false});
 
   @override
-  String toString() => 'MessageResponseSent(originalMessage: $originalMessage, message: $message, hasErrors: $hasErrors)';
+  String toString() =>
+      'MessageResponseSent(originalMessage: $originalMessage, message: $message, hasErrors: $hasErrors)';
 }
 
 class InvokeFunctionResponseSent {
   final FunctionCallRequest functionCallRequest;
 
-  InvokeFunctionResponseSent(
-      {required this.functionCallRequest});
+  InvokeFunctionResponseSent({required this.functionCallRequest});
 
   @override
-  String toString() => 'InvokeFunctionResponseSent(functionCallRequest: $functionCallRequest)';
+  String toString() =>
+      'InvokeFunctionResponseSent(functionCallRequest: $functionCallRequest)';
 }
 
 class FunctionCallResponseSent {
@@ -104,24 +128,26 @@ class FunctionCallResponseSent {
       {required this.functionCallRequest, required this.response});
 
   @override
-  String toString() => 'FunctionCallResponseSent(functionCallRequest: $functionCallRequest, response: $response)';
+  String toString() =>
+      'FunctionCallResponseSent(functionCallRequest: $functionCallRequest, response: $response)';
 }
 
 class MessageSent {
   final ChatMessageBase message;
   final List<ChatMessageBase> previousMessages;
   final TextChatMessage? behaviourPromptMessage;
-  final  List<Map<String, dynamic>>? functions;
-  
-  MessageSent({required this.message, 
-  required this.previousMessages,
-  this.behaviourPromptMessage,
-  this.functions
-  });
+  final List<Map<String, dynamic>>? functions;
+
+  MessageSent(
+      {required this.message,
+      required this.previousMessages,
+      this.behaviourPromptMessage,
+      this.functions});
 
   @override
   String toString() {
-    final fnNames = functions?.map((m) => m['name']).toList() ?? ['no-functions'];
+    final fnNames =
+        functions?.map((m) => m['name']).toList() ?? ['no-functions'];
     return 'MessageSent(message: $message, previousMessages count: ${previousMessages.length}, behaviourPromptMessage size: ${behaviourPromptMessage?.text.length ?? 0}, functions: $fnNames)';
   }
 }
@@ -185,10 +211,8 @@ class AgentletImportPreviewResults {
   String githubUrl;
   List<ManifestV1_1> manifests;
 
-  AgentletImportPreviewResults({
-    required this.githubUrl,
-    required this.manifests
-  });
+  AgentletImportPreviewResults(
+      {required this.githubUrl, required this.manifests});
 
   @override
   String toString() {
@@ -197,6 +221,6 @@ class AgentletImportPreviewResults {
 }
 
 class AgentletImported {
-@override
+  @override
   String toString() => 'AgentletImported()';
 }
