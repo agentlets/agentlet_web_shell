@@ -12,8 +12,8 @@ class OpenAIChatClient {
     this.maxTokens = config.maxTokens || 1000;
     this.logger = config.logger; 
     this.client = new OpenAI({
-       apiKey: this.apiKey,
-       baseURL: 'https://485e6ce3fc0d4af5888d99e3d1f35d1d.api.mockbin.io/'
+       apiKey: this.apiKey
+       //baseURL: 'https://485e6ce3fc0d4af5888d99e3d1f35d1d.api.mockbin.io/'
        });
   }
 
