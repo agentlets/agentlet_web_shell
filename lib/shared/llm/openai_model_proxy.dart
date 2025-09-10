@@ -1,7 +1,6 @@
 
 import 'dart:convert';
-import 'dart:io';
-import 'package:http/http.dart';
+import 'package:http/http.dart' as http;
 import 'package:wshell/model/chat_message.dart';
 import 'package:wshell/shared/app_error.dart';
 import 'package:wshell/shared/llm/llm_model.dart';
@@ -14,12 +13,10 @@ class OpenAIPModelProxy extends LlmModel {
 
   final logger = WebLogger.createLogger(name: 'OpenAIModel');
 
-  final httpClient = HttpClient();
+  // Use package:http client for web compatibility
+  final http.Client httpClient = http.Client();
 
-  OpenAIPModelProxy({
-    required String id,
-    required String name,
-  }) : super(id: id, name: name, provider: 'OpenAI');
+  OpenAIPModelProxy(): super(id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI');
 
   Map<String, String> _buildHeaders() {
     return {
@@ -88,7 +85,7 @@ class OpenAIPModelProxy extends LlmModel {
     return mappedPreviousMessages;
   }
 
-  Future<Response> _performApiRequest(
+  Future<http.Response> _performApiRequest(
     LLMPromptBase prompt,
     List<LLMPromptBase> mappedPreviousMessages,
     List<Map<String, dynamic>>? functions,
@@ -109,16 +106,16 @@ class OpenAIPModelProxy extends LlmModel {
       body: jsonEncode(body),
     )
         .then((r) {
-      final dynamic mappedResponse = {
-        'status': r.statusCode,
-        'body': r.body
-      };
-      logger.debug('<<< response from model: $mappedResponse');
-      return r;
-    });
+          final dynamic mappedResponse = {
+            'status': r.statusCode,
+            'body': r.body
+          };
+          logger.debug('<<< response from model: $mappedResponse');
+          return r;
+        });
   }
 
-  LLMResponse _handleApiResponse(Response response) {
+  LLMResponse _handleApiResponse(http.Response response) {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final messageData = data['choices'][0]['message'];
