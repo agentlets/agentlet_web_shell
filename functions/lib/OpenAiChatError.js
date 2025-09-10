@@ -23,4 +23,4 @@ class OpenAiChatError extends Error {
   }
 }
 
-module.exports = OpenAiChatError;
+export default OpenAiChatError;

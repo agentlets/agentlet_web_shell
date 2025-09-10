@@ -53,4 +53,4 @@ class OpenAIChatResponse {
   }
 }
 
-module.exports = OpenAIChatResponse;
+export default OpenAIChatResponse;
