@@ -1,9 +1,8 @@
-// index.js
-import fetch from 'node-fetch';
+const fetch = require('node-fetch');
 
-export default async function (req, res) {
+module.exports = async function ({ req, res, log, error }) {
   try {
-    const OPENAI_API_KEY = req.env.OPENAI_API_KEY;
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     if (!OPENAI_API_KEY) {
       return res.json({ error: 'Missing OpenAI API key in environment' }, 500);
     }
