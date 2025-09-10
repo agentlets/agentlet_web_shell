@@ -27,7 +27,7 @@ class LlmModels implements LlmModel {
     return _instance;
   }
 
-  final LlmModel _selectedModel = OpenAIPModelProxy();
+  final LlmModel _selectedModel = OpenAIModelProxyClient();
 
   LlmModel get selectedModel => _selectedModel;
 

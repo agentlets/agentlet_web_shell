@@ -7,7 +7,7 @@ import 'package:wshell/shared/llm/llm_model.dart';
 import 'package:wshell/shared/llm/llm_model_error.dart';
 import 'package:wshell/shared/logger.dart';
 
-class OpenAIPModelProxy extends LlmModel {
+class OpenAIModelProxyClient extends LlmModel {
   static final chatUri =
       Uri.parse('https://api.openai.com/v1/chat/completions');
 
@@ -16,7 +16,7 @@ class OpenAIPModelProxy extends LlmModel {
   // Use package:http client for web compatibility
   final http.Client httpClient = http.Client();
 
-  OpenAIPModelProxy(): super(id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI');
+  OpenAIModelProxyClient(): super(id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI');
 
   Map<String, String> _buildHeaders() {
     return {
