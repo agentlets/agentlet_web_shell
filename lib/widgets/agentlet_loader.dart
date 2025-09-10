@@ -58,7 +58,7 @@ class AgentletLoaderController {
   }
 
   void sendMessageToFlutter(String message) {
-    logger.debug('Message received: $message');
+    logger.debug('Rae message to handle: $message');
     final jsonMessage = jsonDecode(message);
     final messageType = jsonMessage['type'];
 
@@ -134,7 +134,7 @@ class _AgentletLoaderState extends State<AgentletLoader> {
   }
 
   void sendMessageToFlutter(String message) {
-    logger.debug('Message received: ${message}');
+    logger.debug('Message to Send to flutter: $message');
     setState(() {
       _lastMessageReceived = message;
     });

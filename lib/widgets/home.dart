@@ -1,4 +1,6 @@
 // home.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:wshell/agentlet_shell/agentlet_shell.dart';
 import 'package:wshell/agentlet_shell/manifest/manifest_interfaces.dart';
@@ -27,6 +29,7 @@ class _HomePageState extends State<HomePage> {
   late final AgentletShell agentletShell;
   late final AgentletLoader webComponentLoader;
   late final AgentletLoaderController agentletLoaderController;
+  StreamSubscription? _messageFromAgentletSub;
   String agentletChatName = '';
   final logger = WebLogger.createLogger(name: 'HomePage');
 
@@ -68,10 +71,17 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    _messageFromAgentletSub?.cancel();
     super.dispose();
   }
 
-  void _subscribeToEvents() async {}
+  void _subscribeToEvents() async {
+    _messageFromAgentletSub =
+        GlobalEventBus.instance.on<AgentletMessageSent>().listen((event) {
+      logger.debug('MyHomePage: evento recibido: ${event}');
+      chatController.sendMessage(event.message);
+    });
+  }
 
   String get _agentletBehaviourPrompt =>
       agentletLoaderController.agentletManifest?.v1_1?.behaviorPrompt ?? '';
